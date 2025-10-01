@@ -1445,6 +1445,13 @@ impl Automerge {
 
     pub(crate) fn import(&self, id: JsValue) -> Result<(ObjId, am::ObjType), error::ImportObj> {
         if let Some(s) = id.as_string() {
+            self.import_str(&s)
+        } else {
+            Err(error::ImportObj::NotString)
+        }
+    }
+
+    pub(crate) fn import_str(&self, s: &str) -> Result<(ObjId, am::ObjType), error::ImportObj> {
             // valid formats are
             // 123@aabbcc
             // 123@aabccc/prop1/prop2/prop3
@@ -1460,9 +1467,6 @@ impl Automerge {
             };
             self.import_path(id, obj_type, components)
                 .map_err(|e| error::ImportObj::InvalidPath(s.to_string(), e))
-        } else {
-            Err(error::ImportObj::NotString)
-        }
     }
 
     pub(crate) fn import_path<'a, I: Iterator<Item = &'a str>>(

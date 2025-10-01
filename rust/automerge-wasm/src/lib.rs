@@ -1102,11 +1102,16 @@ impl Automerge {
         &mut self,
         #[wasm_bindgen(unchecked_param_type = "Heads")] before: Array,
         #[wasm_bindgen(unchecked_param_type = "Heads")] after: Array,
+        path: Option<String>,
     ) -> Result<Array, error::Diff> {
+        let obj = match path {
+            Some(p) => self.import_str(&p)?.0,
+            None => ROOT,
+        };
         let before = get_heads(Some(before))?.unwrap();
         let after = get_heads(Some(after))?.unwrap();
 
-        let patches = self.doc.diff(&before, &after);
+        let patches = self.doc.diff_obj(&obj, &before, &after)?;
 
         Ok(interop::export_patches(&self.external_types, patches)?)
     }
@@ -2033,6 +2038,8 @@ pub mod error {
 
     #[derive(Debug, thiserror::Error)]
     pub enum Diff {
+        #[error(transparent)]
+        Import(#[from] interop::error::ImportObj),
         #[error(transparent)]
         Export(#[from] interop::error::Export),
         #[error("bad heads: {0}")]
