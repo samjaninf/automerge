@@ -1102,16 +1102,29 @@ impl Automerge {
         &mut self,
         #[wasm_bindgen(unchecked_param_type = "Heads")] before: Array,
         #[wasm_bindgen(unchecked_param_type = "Heads")] after: Array,
-        path: Option<String>,
     ) -> Result<Array, error::Diff> {
-        let obj = match path {
-            Some(p) => self.import_str(&p)?.0,
-            None => ROOT,
-        };
         let before = get_heads(Some(before))?.unwrap();
         let after = get_heads(Some(after))?.unwrap();
 
-        let patches = self.doc.diff_obj(&obj, &before, &after)?;
+        let patches = self.doc.diff(&before, &after);
+
+        Ok(interop::export_patches(&self.external_types, patches)?)
+    }
+
+    #[wasm_bindgen(unchecked_return_type = "Patch[]")]
+    pub fn diff_path(
+        &mut self,
+        path: JsValue,
+        #[wasm_bindgen(unchecked_param_type = "Heads")] before: Array,
+        #[wasm_bindgen(unchecked_param_type = "Heads")] after: Array,
+        recursive: bool,
+    ) -> Result<Array, error::Diff> {
+        let obj = self.import(path)?.0;
+
+        let before = get_heads(Some(before))?.unwrap();
+        let after = get_heads(Some(after))?.unwrap();
+
+        let patches = self.doc.diff_obj(&obj, &before, &after, recursive)?;
 
         Ok(interop::export_patches(&self.external_types, patches)?)
     }
